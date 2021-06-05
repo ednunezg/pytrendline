@@ -1,0 +1,16 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+numpy = ">=1.18.5"
+pandas = ">=1.0.4"
+datetime = ">=4.3"
+bokeh = ">=2.0.2"
+colour = ">=0.1.5"
+
+[requires]
+python_version = "3.8"
