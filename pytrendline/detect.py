@@ -235,7 +235,7 @@ def detect(
       'score',
       'includes_global_max_or_min',
       'global_maxs_or_mins',
-      'price_at_next_future_date'
+      'price_at_next_future_date',
       'duplicate_group_id',
       'is_best_from_duplicates',
       'rank'
@@ -292,13 +292,14 @@ def detect(
 
           trend_price_at_k = m * k + b
 
-          # Determine if this trend is a breakout
-          if tt == structs.TrendlineTypes.RESISTANCE and trend_price_at_k < pseries[k] - breakout_tolerance or \
-              tt == structs.TrendlineTypes.SUPPORT and trend_price_at_k > pseries[k] + breakout_tolerance:
+          # Determine if this trend is a breakout, if it hasn't been identified as one already
+          if not is_breakout:
+            if tt == structs.TrendlineTypes.RESISTANCE and trend_price_at_k < pseries[k] - breakout_tolerance or \
+                tt == structs.TrendlineTypes.SUPPORT and trend_price_at_k > pseries[k] + breakout_tolerance:
 
-            breakout_index = k
-            breakout_date = candlestick_data.df.iloc[i].Date
-            is_breakout = True
+              breakout_index = k
+              breakout_date = candlestick_data.df.iloc[i].Date
+              is_breakout = True
             
 
           if abs(trend_price_at_k - pseries[k]) < max_allowable_error_pt_to_trend:
@@ -371,6 +372,9 @@ def detect(
     # Mark which of the trendlines are duplicate
     trends_df = _mark_duplicates(trends_df, candlestick_data, tt, config)
     trends_df = trends_df.sort_values(by='score', ascending=False)
+
+    # Correct data types
+    trends_df["is_breakout"] = trends_df["is_breakout"].astype(bool)
 
     return trends_df, pivots
 
@@ -475,7 +479,7 @@ def _mark_duplicates(trends_df, candlestick_data, trend_type, config):
     trends_df.loc[ trends_df.iloc[0].name , 'rank'] = 1
     return
 
-  best_results = trends_df.sort_values(by='score', ascending=False).groupby(["duplicate_group_id"]).last().reset_index()
+  best_results = trends_df.sort_values(by='score', ascending=True).groupby(["duplicate_group_id"]).last().reset_index()
   rank = 1
 
   for i in range(0, len(best_results)):

@@ -80,7 +80,7 @@ class TrendlineFigure():
     self.is_best_from_duplicates = result_row['is_best_from_duplicates']
     self.plotting_prop_overrides = plotting_prop_overrides
 
-  def plot(self, p, candles_df, opts={}):    
+  def plot_figure(self, p, candles_df, opts={}):    
     pointset_indeces = []
     for date in self.pointset_dates:
       pointset_indeces.append( candles_df.loc[candles_df['Date'] == date].index[0] )
@@ -100,7 +100,7 @@ class TrendlineFigure():
     m, b = np.polyfit([pt_set_x[0], pt_set_x[-1]], [pt_set_y[0], pt_set_y[-1]], 1)
 
     if self.breakout_index != None:
-      last_date_index = self.breakout_index + 0.5
+      last_date_index = self.breakout_index + 0.05
       last_date_trendline_price = m * last_date_index + b
       p.x([last_date_index], [last_date_trendline_price], line_width=3, size=10, color="red", alpha=0.8)
     else:
@@ -124,7 +124,7 @@ class TrendlineFigure():
     # Draw plot score label
     if self.is_best_from_duplicates:
       label_text =  "Score " + str(self.id) + " = " + str(round(self.score, 2))
-      if self.breakout_index != None: label_text += " (breakout)"
+      if self.breakout_index != None: label_text += " (breakout at {})".format(self.breakout_index)
       
       label_x_pos = last_date_index + 2
       label_y_pos = tl_y_at_last_date + (2 * m)
@@ -232,17 +232,7 @@ def _highlight_pivots(p, pivots_dates, col, candles_df):
     pivots_y_vals.append(pivot_y_val)
   p.diamond(pivots_x_vals, pivots_y_vals, size=20, line_color="green", fill_alpha=0.1, alpha=0.5)
 
-def plot(
-  results=None,
-  filedir='.',
-  filename='trend_plot.html',
-):
-
-  # Validate data
-  if results == None or type(results) != dict:
-    raise Exception("results argument for plot needs to be output of detect(...)")
-
-
+def plot_graph_bokeh(results):
   candlestick_data = results["candlestick_data"]
 
   # Plot
@@ -286,19 +276,17 @@ def plot(
   p.vbar(candles_df.index[inc], w, candles_df.Open[inc], candles_df.Close[inc], fill_color="#D5E1DD", line_color="black")
   p.vbar(candles_df.index[dec], w, candles_df.Open[dec], candles_df.Close[dec], fill_color="#F2583E", line_color="black")
 
-  print("support trends = ", results['support_trendlines'])
-
   # Plot trendlines (support)
   if 'support_trendlines' in results:
     for _, result_row in results['support_trendlines'].iterrows():
       tf = TrendlineFigure(structs.TrendlineTypes.SUPPORT, result_row)
-      tf.plot(p, candles_df)
+      tf.plot_figure(p, candles_df)
 
   # Plot trendlines (resistsance)
   if 'resistance_trendlines' in results:
     for _, result_row in results['resistance_trendlines'].iterrows():
       tf = TrendlineFigure(structs.TrendlineTypes.RESISTANCE, result_row)
-      tf.plot(p, candles_df)
+      tf.plot_figure(p, candles_df)
 
   # Draw vertical lines at first and last price
   _draw_bidirectional_ray(p, candles_df.index[0] - 0.5, 0, 90, "#bbbbbb")
@@ -311,7 +299,12 @@ def plot(
   if 'resistance_pivots' in results:
     _highlight_pivots(p, results['resistance_pivots'], "Low", candles_df)
 
-  # Plot trendline results dataframe below the plot
+  # Styling nits
+  p.title.text_font_size = '16pt'
+
+  return p
+
+def plot_table_bokeh(results):
   if results['trend_type'] == structs.TrendlineTypes.BOTH:
     all_results = pd.concat([results['support_trendlines'], results['resistance_trendlines']])
   elif results['trend_type'] == structs.TrendlineTypes.SUPPORT:
@@ -320,24 +313,38 @@ def plot(
     all_results = results['resistance_trendlines']
 
   if len(all_results) > 0:
-    html_trends_table = all_results.to_html(border=0, header=True, index=False, justify="left")
+    html_trends_table = all_results.to_html(border=0, header=True, index=False, justify="left", float_format=lambda x: '%10.3f' % x)
   else:
     html_trends_table = '<p>No trendlines found</p>'
 
-  text_div = Div(text="", width=1000)
-  text_div.text = '''
+  div = Div(text="", width=1000)
+  div.text = '''
     <div>
       <h1>Trendline results:</h1><br/>
       {}
     </div>
   '''.format(html_trends_table)
 
-  # Styling nits
-  p.title.text_font_size = '16pt'
+  return div
+
+def plot(
+  results=None,
+  filedir='.',
+  filename='trend_plot.html',
+):
+  # Validate data
+  if results == None or type(results) != dict:
+    raise Exception("results argument for plot needs to be output of detect(...)")
+
+  # Plot candlestick graph with trendlines
+  trend_graph = plot_graph_bokeh(results)
+
+  # Plot trendline results dataframe below the plot
+  trend_table = plot_table_bokeh(results)
 
   # Get HTML content
   filepath = filedir + '/' + filename
-  html_content = file_html(models=(p, text_div), resources=(CDN), title=site_title)
+  html_content = file_html(models=(trend_graph, trend_table), resources=(CDN), title="pytrendline results")
 
   # Hack in extra styles to HTML
   html_content = html_content.replace('<head>', '<head><style class="custom" type="text/css">{}</style>'.format(css_hack))

@@ -1,9 +1,10 @@
 import pytrendline
 import pandas as pd
 import os
+import time
 
 # 1. Construct candlestick data. This example just grabs data from a fixture
-candles_df = pd.read_csv('./fixtures/1m_candlesticks.csv')
+candles_df = pd.read_csv('./pytrendline/fixtures/example.csv')
 candles_df.set_index('Idx')
 candles_df['Date'] = pd.to_datetime(candles_df['Date'])
 
@@ -17,6 +18,10 @@ candlestick_data = pytrendline.CandlestickData(
   close_col="Close", # name of the column containing candle "Close" price
   datetime_col="Date" # name of the column containing candle datetime price (use none if datetime is in index)
 )
+
+print("📈 📉 Starting call to pytrendline.detect ... (this could take a while on a large candlestick dataset)")
+
+detect_start_time = time.time()
 
 # 2. Find trendlines. Results are returned in the form of
 #     a. A pandas dataframe table containing trendline found per row
@@ -38,8 +43,12 @@ results = pytrendline.detect(
   # Specify if you want to ignore prices before some date
   scan_from_date=None,
   # Specify if you want to ignore 'breakout' lines. That is, lines that interesect a candle
-  ignore_breakouts=True,
+  ignore_breakouts=False,
 )
+
+detect_end_time = time.time()
+
+print("✅ pytrendline.detect took {:.4f}s".format(detect_end_time - detect_start_time))
 
 # 3. Plot the trendlines found
 outf = pytrendline.plot(
@@ -48,5 +57,5 @@ outf = pytrendline.plot(
   filename='example_output.html',
 )
 
-print("Trendline results in {}".format(outf))
+print("💾 Trendline results saved in {}".format(outf))
 os.system("open " + outf)
