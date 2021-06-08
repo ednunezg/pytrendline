@@ -13,8 +13,19 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/ednunezg/pytrendline",
     packages=find_packages(),
+    license='MIT',
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
+    ],
+    platforms=['any'],
+    packages=find_packages(exclude=['contrib', 'docs', 'tests', 'examples']),
+    install_requires=[
+        'numpy>=1.18.5',
+        'pandas>=1.0.4',
+        'datetime>=4.3',
+        'bokeh>=2.0.2',
+        'colour>=0.1.5',
     ]
+)
