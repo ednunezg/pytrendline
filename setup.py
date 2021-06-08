@@ -4,8 +4,8 @@ with open("README.md", "r") as f:
     long_description = f.read()
 
 setup(
-    name="primelib-ednunezg",
-    version="0.0.1",
+    name="pytrendline",
+    version="1.0.0",
     author="Eduardo Nunez",
     author_email="ed@ednunez.me",
     description="Detection for support and resistance trendlines on python",
