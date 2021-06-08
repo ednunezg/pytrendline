@@ -12,7 +12,6 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ednunezg/pytrendline",
-    packages=find_packages(),
     license='MIT',
     classifiers=[
         "Programming Language :: Python :: 3",
