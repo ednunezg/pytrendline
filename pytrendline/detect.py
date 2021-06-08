@@ -15,7 +15,7 @@ DEFAULT_CONFIG = {
   "pivot_grouping_threshold": lambda candles: util.avg_candle_range(candles) * 0.1,
 
   # Max allowable error for a trendline point and a candlestick price
-  "max_allowable_error_pt_to_trend": lambda candles: util.avg_candle_range(candles) * 0.1,
+  "max_allowable_error_pt_to_trend": lambda candles: util.avg_candle_range(candles) * 0.06,
   
   # After trendlines have been found, the slopes and last prices for each trendline are collected in a 2D
   # array. We use 2D clustering of (slope,last_price) to find 'duplicates' ie almost identical trendlines

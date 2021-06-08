@@ -20,6 +20,7 @@ setup(
     ],
     platforms=['any'],
     packages=find_packages(exclude=['contrib', 'docs', 'tests', 'examples']),
+    include_package_data=True,
     install_requires=[
         'numpy>=1.18.5',
         'pandas>=1.0.4',
