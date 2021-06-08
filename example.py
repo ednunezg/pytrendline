@@ -4,7 +4,7 @@ import os
 import time
 
 # 1. Construct candlestick data. This example just grabs data from a fixture
-candles_df = pd.read_csv('./pytrendline/fixtures/example.csv')
+candles_df = pd.read_csv('./fixtures/example.csv')
 candles_df.set_index('Idx')
 candles_df['Date'] = pd.to_datetime(candles_df['Date'])
 
@@ -43,7 +43,7 @@ results = pytrendline.detect(
   # Specify if you want to ignore prices before some date
   scan_from_date=None,
   # Specify if you want to ignore 'breakout' lines. That is, lines that interesect a candle
-  ignore_breakouts=False,
+  ignore_breakouts=True,
 )
 
 detect_end_time = time.time()

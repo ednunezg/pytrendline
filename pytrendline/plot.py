@@ -74,10 +74,11 @@ class TrendlineFigure():
     self.id = result_row['id']
     self.pointset_dates = result_row['pointset_dates']
     self.breakout_index = result_row['breakout_index']
+    self.is_breakout = result_row['is_breakout']
     self.score = result_row['score']
     self.includes_global_max_or_min = result_row['includes_global_max_or_min']
     self.global_maxs_or_mins = result_row['global_maxs_or_mins']
-    self.is_best_from_duplicates = result_row['is_best_from_duplicates']
+    self.is_best_from_duplicate_group = result_row['is_best_from_duplicate_group']
     self.plotting_prop_overrides = plotting_prop_overrides
 
   def plot_figure(self, p, candles_df, opts={}):    
@@ -99,7 +100,7 @@ class TrendlineFigure():
     # Calculate slope and intersect using first point and last point
     m, b = np.polyfit([pt_set_x[0], pt_set_x[-1]], [pt_set_y[0], pt_set_y[-1]], 1)
 
-    if self.breakout_index != None:
+    if self.is_breakout:
       last_date_index = self.breakout_index + 0.05
       last_date_trendline_price = m * last_date_index + b
       p.x([last_date_index], [last_date_trendline_price], line_width=3, size=10, color="red", alpha=0.8)
@@ -122,9 +123,9 @@ class TrendlineFigure():
     )
 
     # Draw plot score label
-    if self.is_best_from_duplicates:
+    if self.is_best_from_duplicate_group:
       label_text =  "Score " + str(self.id) + " = " + str(round(self.score, 2))
-      if self.breakout_index != None: label_text += " (breakout at {})".format(self.breakout_index)
+      if self.is_breakout: label_text += " (breakout at {})".format(self.breakout_index)
       
       label_x_pos = last_date_index + 2
       label_y_pos = tl_y_at_last_date + (2 * m)
@@ -181,7 +182,7 @@ class TrendlineFigure():
     else:
       c = orange
     
-    if self.breakout_index != None:
+    if self.is_breakout:
       # Set color to grey if we find that line has expired
       c = grey
 
@@ -192,22 +193,22 @@ class TrendlineFigure():
     if "line_width" in self.plotting_prop_overrides:
       return self.plotting_prop_overrides["line_width"]
 
-    if self.breakout_index is not None:
+    if self.is_breakout:
       return 1
     
     else:
-      if self.is_best_from_duplicates:
+      if self.is_best_from_duplicate_group:
         return 2
       else:
-        return 0.5
+        return 1
 
   def get_trendline_plot_line_style(self):
     if "line_style" in self.plotting_prop_overrides:
       return self.plotting_prop_overrides["line_style"]
 
-    if self.breakout_index != None:
+    if self.is_breakout:
       return "dotted"
-    elif self.is_best_from_duplicates:
+    elif self.is_best_from_duplicate_group:
       return "dashed"
     else:
       return "dotted"
@@ -215,13 +216,7 @@ class TrendlineFigure():
 def _draw_bidirectional_ray(p, x, y, angle, color, width=2, dash="dashed"):
   p.segment(x0=x, x1=x, y0=0, y1=10000, line_color=color, line_dash=dash, line_width=width)
 
-def _highlight_pivots(p, pivots_dates, col, candles_df):
-  pivots_indexes = []
-  for d in pivots_dates:
-    query = candles_df.loc[candles_df['Date'] == d]
-    if len(query) > 0:
-      pivots_indexes.append(query.iloc[0].name)
-
+def _highlight_pivots(p, pivots_indexes, col, candles_df):
   # Highlight pivot points
   pivots_x_vals = []
   pivots_y_vals = []
@@ -313,7 +308,7 @@ def plot_table_bokeh(results):
     all_results = results['resistance_trendlines']
 
   if len(all_results) > 0:
-    html_trends_table = all_results.to_html(border=0, header=True, index=False, justify="left", float_format=lambda x: '%10.3f' % x)
+    html_trends_table = all_results.drop('pointset_dates', 1).to_html(border=0, header=True, index=False, justify="left", float_format=lambda x: '%10.3f' % x)
   else:
     html_trends_table = '<p>No trendlines found</p>'
 

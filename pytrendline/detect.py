@@ -27,14 +27,14 @@ DEFAULT_CONFIG = {
   "breakout_tolerance": lambda candles: util.avg_candle_range(candles) * 0.08,
 
   # Scores a detected trendline given a slice of distance from trend to price, slope, and candlesticks
-  "scoring_function": lambda candles, err_distances, num_points, slope: (util.avg_candle_range(candles) / util.mean(err_distances)) * (2 ** num_points),
+  "scoring_function": lambda candles, err_distances, num_points, slope: (util.avg_candle_range(candles) / util.mean(err_distances)) * (2.5 ** num_points),
 
   # Max and min allowable slope angle for both resistance and support lines
   # By default set to allow all angles but min or max can be set to 0 to only allow possitive / negative slopes
   'max_allowable_support_slope': lambda candles: sys.float_info.max,
-  'min_allowable_support_slope': lambda candles: sys.float_info.min,
+  'min_allowable_support_slope': lambda candles: -sys.float_info.max,
   'max_allowable_resistance_slope': lambda candles: sys.float_info.max,
-  'min_allowable_resistance_slope': lambda candles: sys.float_info.min,
+  'min_allowable_resistance_slope': lambda candles: -sys.float_info.max,
 
   # Max and min allowable last price point for both resistance and support lines
   # By default set to be 1.5X of last candle closing price for max and 0.667x for min 
@@ -61,8 +61,8 @@ def get_pivots(
   elif type(trend_type) != str:
     raise Exception("trend_type input provided is of invalid type. See README for instructions")
 
-  separation_thres = config['pivot_seperation_threshold'](candlestick_data)
-  grouping_thres = config['pivot_grouping_threshold'](candlestick_data)
+  separation_thres = config.get('pivot_seperation_threshold', DEFAULT_CONFIG['pivot_seperation_threshold'])(candlestick_data)
+  grouping_thres = config.get('pivot_grouping_threshold', DEFAULT_CONFIG['pivot_grouping_threshold'])(candlestick_data)
 
   col = "Low" if trend_type == structs.TrendlineTypes.SUPPORT else "High"  
   pseries = candlestick_data.df[col][scan_from_index:]
@@ -171,16 +171,16 @@ def detect(
       raise Exception("trend_type input provided is of invalid type. See README for instructions")
 
     # Process config
-    max_allowable_error_pt_to_trend = config["max_allowable_error_pt_to_trend"](candlestick_data)
-    breakout_tolerance = config["breakout_tolerance"](candlestick_data)
-    max_allowable_support_slope = config["max_allowable_support_slope"](candlestick_data)
-    min_allowable_support_slope = config["min_allowable_support_slope"](candlestick_data)
-    max_allowable_resistance_slope = config["max_allowable_resistance_slope"](candlestick_data)
-    min_allowable_resistance_slope = config["min_allowable_resistance_slope"](candlestick_data)
-    max_allowable_support_last_price = config["max_allowable_support_last_price"](candlestick_data)
-    min_allowable_support_last_price = config["min_allowable_support_last_price"](candlestick_data)
-    max_allowable_resistance_last_price = config["max_allowable_resistance_last_price"](candlestick_data)
-    min_allowable_resistance_last_price = config["min_allowable_resistance_last_price"](candlestick_data)
+    max_allowable_error_pt_to_trend = config.get("max_allowable_error_pt_to_trend", DEFAULT_CONFIG["max_allowable_error_pt_to_trend"])(candlestick_data)
+    breakout_tolerance = config.get("breakout_tolerance", DEFAULT_CONFIG["breakout_tolerance"])(candlestick_data)
+    max_allowable_support_slope = config.get("max_allowable_support_slope", DEFAULT_CONFIG["max_allowable_support_slope"])(candlestick_data)
+    min_allowable_support_slope = config.get("min_allowable_support_slope", DEFAULT_CONFIG["min_allowable_support_slope"])(candlestick_data)
+    max_allowable_resistance_slope = config.get("max_allowable_resistance_slope", DEFAULT_CONFIG["max_allowable_resistance_slope"])(candlestick_data)
+    min_allowable_resistance_slope = config.get("min_allowable_resistance_slope", DEFAULT_CONFIG["min_allowable_resistance_slope"])(candlestick_data)
+    max_allowable_support_last_price = config.get("max_allowable_support_last_price", DEFAULT_CONFIG["max_allowable_support_last_price"])(candlestick_data)
+    min_allowable_support_last_price = config.get("min_allowable_support_last_price", DEFAULT_CONFIG["min_allowable_support_last_price"])(candlestick_data)
+    max_allowable_resistance_last_price = config.get("max_allowable_resistance_last_price", DEFAULT_CONFIG["max_allowable_resistance_last_price"])(candlestick_data)
+    min_allowable_resistance_last_price = config.get("min_allowable_resistance_last_price", DEFAULT_CONFIG["min_allowable_resistance_last_price"])(candlestick_data)
 
     max_allowable_slope = max_allowable_support_slope if tt == structs.TrendlineTypes.SUPPORT else max_allowable_resistance_slope
     min_allowable_slope = min_allowable_support_slope if tt == structs.TrendlineTypes.SUPPORT else min_allowable_resistance_slope
@@ -204,7 +204,6 @@ def detect(
     pivots_sorted = list(pivots)
     pivots_sorted.sort()
 
-    df = candlestick_data.df
     avg_candle_range = util.avg_candle_range(candlestick_data)
 
     # Threshold to decide max difference from a global max/min and consecutive best next global max/min to both be considered
@@ -225,6 +224,7 @@ def detect(
       'starts_at_date',
       'ends_at_index',
       'ends_at_date',
+      'is_breakout',
       'breakout_index',
       'breakout_date',
       'num_points',
@@ -237,8 +237,9 @@ def detect(
       'global_maxs_or_mins',
       'price_at_next_future_date',
       'duplicate_group_id',
-      'is_best_from_duplicates',
-      'rank'
+      'is_best_from_duplicate_group',
+      'overall_rank',
+      'rank_within_group',
     ])
     
     for i in range(0, len(pseries)):
@@ -341,7 +342,7 @@ def detect(
           price_actual = pseries[point_index]
           err_distances.append(abs(price_at_trendline - price_actual))
         
-        score = config["scoring_function"](candlestick_data, err_distances, num_points, slope)
+        score = config.get("scoring_function", DEFAULT_CONFIG["scoring_function"])(candlestick_data, err_distances, num_points, slope)
         
         trends_df = trends_df.append({
           'id':              pointset_id,
@@ -365,8 +366,9 @@ def detect(
           'includes_global_max_or_min': global_pt_found,
           'price_at_next_future_date': trend_price_at_last + m,
           'duplicate_group_id': None,
-          'is_best_from_duplicates': False,
-          'rank': None,
+          'is_best_from_duplicate_group': False,
+          'overall_rank': None,
+          'rank_within_group': 0
         }, ignore_index=True)
 
     # Mark which of the trendlines are duplicate
@@ -411,15 +413,16 @@ def detect(
     }
 
 def _mark_duplicates(trends_df, candlestick_data, trend_type, config):
-  duplicate_grouping_threshold_last_price = config["duplicate_grouping_threshold_last_price"](candlestick_data)
-  duplicate_grouping_threshold_slope = config["duplicate_grouping_threshold_slope"](candlestick_data)
+  duplicate_grouping_threshold_last_price = config.get("duplicate_grouping_threshold_last_price", DEFAULT_CONFIG['duplicate_grouping_threshold_last_price'])(candlestick_data)
+  duplicate_grouping_threshold_slope = config.get("duplicate_grouping_threshold_slope", DEFAULT_CONFIG['duplicate_grouping_threshold_slope'])(candlestick_data)
   
   if len(trends_df) == 0: return trends_df
 
   if len(trends_df) == 1:
     trends_df.loc[0, 'duplicate_group_id'] = 1000
-    trends_df.loc[0, 'is_best_from_duplicates'] = True
-    trends_df.loc[0, 'rank'] = 1
+    trends_df.loc[0, 'is_best_from_duplicate_group'] = True
+    trends_df.loc[0, 'overall_rank'] = 1
+    trends_df.loc[0, 'rank_within_group'] = 1
     return trends_df
 
   group_idx = 1000 if trend_type == structs.TrendlineTypes.RESISTANCE else 2000
@@ -475,17 +478,29 @@ def _mark_duplicates(trends_df, candlestick_data, trend_type, config):
   
   # For all the duplicate groups found, mark best for each group
   if(len(trends_df) == 1):
-    trends_df.loc[ trends_df.iloc[0].name , 'is_best_from_duplicates'] = True
-    trends_df.loc[ trends_df.iloc[0].name , 'rank'] = 1
+    trends_df.loc[ trends_df.iloc[0].name , 'is_best_from_duplicate_group'] = True
+    trends_df.loc[ trends_df.iloc[0].name , 'overall_rank'] = 1
+    trends_df.loc[ trends_df.iloc[0].name, 'rank_within_group'] = 1
     return
 
   best_results = trends_df.sort_values(by='score', ascending=True).groupby(["duplicate_group_id"]).last().reset_index()
-  rank = 1
+  overall_rank = 1
 
   for i in range(0, len(best_results)):
     row = best_results.iloc[i]
-    trends_df.loc[ trends_df['id'] == row['id'] , 'is_best_from_duplicates'] = True
-    trends_df.loc[ trends_df['id'] == row['id'] , 'rank'] = rank
-    rank += 1
+    trends_df.loc[ trends_df['id'] == row['id'] , 'is_best_from_duplicate_group'] = True
+    trends_df.loc[ trends_df['id'] == row['id'] , 'overall_rank'] = overall_rank
+    overall_rank += 1
+
+  # Mark rank within each group
+  dup_groups = trends_df.groupby(["duplicate_group_id"])
+  for group_name, df_group in dup_groups:
+    group_rank = 1
+
+    df_group_sorted = df_group.sort_values(by='score', ascending=False)
+
+    for row_index, row in df_group_sorted.iterrows():
+      trends_df.loc[row_index, 'rank_within_group'] = int(group_rank)
+      group_rank += 1
 
   return trends_df
