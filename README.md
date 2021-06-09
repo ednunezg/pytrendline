@@ -2,7 +2,7 @@
 
 ## About
 
-Given a collection of OHLC candlestick chart, pytrendline allows you to detect support and resistance lines formed by the High and Close price series.
+Given a OHLC candlestick chart, pytrendline allows you to detect support and resistance lines formed by the High and Close price series.
 
 The trendline scanning algorithm scans for the existence of trendlines by attempting to draw lines between points [(0,1),(0,2),(0,3)...(0,N)] for the first iteration. Subsequent iteration attempts to draw lines between points [(1,2),(1,3),...(1,N)], then [(2,3),(2,4)...(2,N)] and so forth.
 
