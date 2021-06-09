@@ -292,7 +292,7 @@ def plot_graph_bokeh(results):
   if 'support_pivots' in results:
     _highlight_pivots(p, results['support_pivots'], "Low", candles_df)
   if 'resistance_pivots' in results:
-    _highlight_pivots(p, results['resistance_pivots'], "Low", candles_df)
+    _highlight_pivots(p, results['resistance_pivots'], "High", candles_df)
 
   # Styling nits
   p.title.text_font_size = '16pt'

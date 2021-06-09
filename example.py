@@ -28,8 +28,9 @@ detect_start_time = time.time()
 #     b. A pandas series containing pivot points
 results = pytrendline.detect(
   candlestick_data=candlestick_data,
-  trend_type=pytrendline.TrendlineTypes.BOTH,
 
+  # Choose between BOTH, SUPPORT or RESISTANCE
+  trend_type=pytrendline.TrendlineTypes.BOTH,
   # Specify if you require the first point of a trendline to be a pivot
   first_pt_must_be_pivot=False,
   # Specify if you require the last point of the trendline to be a pivot
@@ -44,6 +45,8 @@ results = pytrendline.detect(
   scan_from_date=None,
   # Specify if you want to ignore 'breakout' lines. That is, lines that interesect a candle
   ignore_breakouts=True,
+  # Specify and override to default config (See docs on how)
+  config={}
 )
 
 detect_end_time = time.time()
