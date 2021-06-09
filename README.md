@@ -4,6 +4,8 @@
 
 Given a OHLC candlestick chart, pytrendline allows you to detect support and resistance lines formed by the High and Close price series.
 
+![pytrendline preview](https://github.com/ednunezg/pytrendline/blob/master/img/about.png)
+
 The trendline scanning algorithm scans for the existence of trendlines by attempting to draw lines between points [(0,1),(0,2),(0,3)...(0,N)] for the first iteration. Subsequent iteration attempts to draw lines between points [(1,2),(1,3),...(1,N)], then [(2,3),(2,4)...(2,N)] and so forth.
 
 Because this operates by doing a full exhaustive search, the runtime is of cubic complexity O(N^3). If low latency is important and your use case is extremely large datasets, you might want to look into alternative algorithms / libraries. For picking up trendlines on day-trading use cases (small number of candles) or offline analysis it works great.
@@ -19,10 +21,13 @@ Note: pivot points are identified as local maximum or minimum points ie “troug
 2. In each scan between points (i,j), pytrendln attempts to draw a line on top of the candlestick chart and checks the following:
 
 * What are the “points” that make up the trendline? For a trendline to be valid it must satisfy the minimum number of points specified in argument `detect(...)` argument `min_points_required`. A date in a trendline is determined to be a valid “point” if the distance between the drawn trendline and the candlestick price does not exceed `max_allowable_error_pt_to_trend`
+
+![Error between trendline and price](https://github.com/ednunezg/pytrendline/blob/master/img/trend_error.png)
 		
 * Does the trendline cross over a candlestick body somewhere in its trajectory? If the trendline intersects some distance higher `breakout_tolerance` above the candlestick body, we consider this line to be a breakout. Breakout trendlines are only considered valid if `detect(...)` argument `ignore_breakouts` is set to `False`. 
 
 * Checks if the trendline satisfies optional pivot point requirements. If not, the trendline is discarded.
+
 A score is given to the trendline using scoring function specified in `detect(...)` argument `config`. The default scoring function scores trendlines higher if the mean distance between trendline and candle points are low and also gives additional favorability to a higher number of points.
 
 Default scoring function:
@@ -31,6 +36,8 @@ Default scoring function:
 ```
 
 3. Oftentimes, the trendline search finds trendlines that are almost identical in slope and last price and groups them. Because we might only care about the best scored trendline from each of these groups, the best one is identified and you can choose to discard the rest for your analysis.
+
+![Duplicate grouping](https://github.com/ednunezg/pytrendline/blob/master/img/duplicate_grouping.png)
 
 This grouping is done by 2D clustering the set of (slope,last_price) pairs for all trendlines. Two trendlines are identified to be a part of the same group if both their slopes and last_price are within `duplicate_grouping_threshold_slope` and `duplicate_grouping_threshold_last_price` respectively.
 
