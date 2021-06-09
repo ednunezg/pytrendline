@@ -92,7 +92,7 @@ results = pytrendline.detect(
 
 ## Tuning algorithm parameters
 
-DEFAULT_CONFIG within source file detect.py [TODO LINK] contains default parameters regarding thresholds for pivot detection, trendline detection, grouping, scoring, etc. All of these config parameters are a lambda taking candlestick data as input.
+[DEFAULT_CONFIG within source file detect.py](https://github.com/ednunezg/pytrendline/blob/b01bdb6fccea5aead62d9ac912ab53fefdb0cecd/pytrendline/detect.py#L8) contains default parameters regarding thresholds for pivot detection, trendline detection, grouping, scoring, etc. All of these config parameters are a lambda taking candlestick data as input.
 
 You can override a default by passing a new key string + lambda pair to the `config` parameter in `detect`.
 
