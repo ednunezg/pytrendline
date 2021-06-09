@@ -113,6 +113,8 @@ os.system("open " + outf)
 
 ```
 
+In the resulting plot, pivot points are marked as green diamonds, best trendlines for each duplicate gruop is shown in solid dashed blue/orange, and non-best trendlines are shown in transaparent dotted blue/orange.
+
 ## Running example
 
 You can run the example included in this repo to get a taste of what is possible with this library.
