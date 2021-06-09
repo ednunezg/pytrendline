@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="pytrendline",
-    version="1.0.0",
+    version="1.0.1",
     author="Eduardo Nunez",
     author_email="ed@ednunez.me",
     description="Detection for support and resistance trendlines on python",
