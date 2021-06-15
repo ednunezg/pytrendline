@@ -101,7 +101,7 @@ results = detect(
    …
    config={
         # Force the tolerance to be derived from last candle price
-        "max_allowable_error_pt_to_trend": lambda candles: candles.iloc[-1].Close / 100,
+        "max_allowable_error_pt_to_trend": lambda candles: candles.df.iloc[-1].Close / 100,
    }
 )
 ```
