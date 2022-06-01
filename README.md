@@ -143,5 +143,5 @@ python example.py
 Library can install using pip:
 
 ```
-pip install trendln
+pip install pytrendline
 ```
