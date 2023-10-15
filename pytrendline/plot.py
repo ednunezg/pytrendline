@@ -131,7 +131,7 @@ class TrendlineFigure():
       label_y_pos = tl_y_at_last_date + (2 * m)
 
       label = Label(x=label_x_pos, y=label_y_pos,
-                 text=label_text, render_mode='css',
+                 text=label_text,
                  border_line_color=color, border_line_alpha=0.8,
                  background_fill_color='white', background_fill_alpha=1.0)
       p.segment(
@@ -255,7 +255,7 @@ def plot_graph_bokeh(results):
   p = figure(
     x_axis_type="datetime",
     tools="pan,wheel_zoom,tap,crosshair,hover,poly_draw,reset,save",
-    plot_width=1300,
+    width=1300,
     title=site_title,
     y_range=(y_range_top, y_range_bottom),
     x_range=(x_range_left, x_range_right),
@@ -308,7 +308,7 @@ def plot_table_bokeh(results):
     all_results = results['resistance_trendlines']
 
   if len(all_results) > 0:
-    html_trends_table = all_results.drop('pointset_dates', 1).to_html(border=0, header=True, index=False, justify="left", float_format=lambda x: '%10.3f' % x)
+    html_trends_table = all_results.drop(columns='pointset_dates').to_html(border=0, header=True, index=False, justify="left", float_format=lambda x: '%10.3f' % x)
   else:
     html_trends_table = '<p>No trendlines found</p>'
 

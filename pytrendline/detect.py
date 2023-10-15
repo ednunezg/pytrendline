@@ -344,32 +344,31 @@ def detect(
         
         score = config.get("scoring_function", DEFAULT_CONFIG["scoring_function"])(candlestick_data, err_distances, num_points, slope)
         
-        trends_df = trends_df.append({
-          'id':              pointset_id,
-          'trendtype':       tt,
-          'pointset_indeces':points_in_trendline,
-          'pointset_dates':  [candlestick_data.df.iloc[pt].Date for pt in points_in_trendline],
-          'starts_at_index': points_in_trendline[0],
-          'starts_at_date':  candlestick_data.df.iloc[points_in_trendline[0]].Date,
-          'ends_at_index':   points_in_trendline[-1],
-          'ends_at_date':    candlestick_data.df.iloc[points_in_trendline[-1]].Date,
-          'is_breakout':     is_breakout,
-          'breakout_index':  breakout_index,
-          'breakout_date':   breakout_date,
-          'num_points':      num_points,
-          'm': m,
-          'b': b,
-          'slope': slope,
-          'price_at_last_date': trend_price_at_last,
-          'score': score,
-          'global_maxs_or_mins': global_max_or_mins,
-          'includes_global_max_or_min': global_pt_found,
-          'price_at_next_future_date': trend_price_at_last + m,
-          'duplicate_group_id': None,
-          'is_best_from_duplicate_group': False,
-          'overall_rank': None,
-          'rank_within_group': 0
-        }, ignore_index=True)
+        trends_df.loc[len(trends_df.index)] = [
+            pointset_id,
+            tt,
+            points_in_trendline,
+            [candlestick_data.df.iloc[pt].Date for pt in points_in_trendline],
+            points_in_trendline[0],
+            candlestick_data.df.iloc[points_in_trendline[0]].Date,
+            points_in_trendline[-1],
+            candlestick_data.df.iloc[points_in_trendline[-1]].Date,
+            is_breakout,
+            breakout_index,
+            breakout_date,
+            num_points,
+            m,
+            b,
+            slope,
+            trend_price_at_last,
+            score,
+            global_pt_found,
+            global_max_or_mins,
+            trend_price_at_last + m,
+            None,
+            False,
+            None,
+            0]
 
     # Mark which of the trendlines are duplicate
     trends_df = _mark_duplicates(trends_df, candlestick_data, tt, config)
